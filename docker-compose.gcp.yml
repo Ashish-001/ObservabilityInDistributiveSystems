@@ -10,10 +10,11 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: product-service
     volumes:
-      - ./data/mongodb:/data/db
+      - mongodb_data:/data/db
     networks:
       - microservices-network
     restart: unless-stopped
+
   mysql:
     image: mysql:8.3.0
     container_name: mysql
@@ -22,16 +23,16 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./data/mysql:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
     networks:
       - microservices-network
     restart: unless-stopped
+
   keycloak-mysql:
     container_name: keycloak-mysql
     image: mysql:8.3.0
     volumes:
-      - ./volume-data/mysql_keycloak_data:/var/lib/mysql
+      - keycloak_mysql_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: keycloak
@@ -40,13 +41,14 @@ services:
     networks:
       - microservices-network
     restart: unless-stopped
+
   keycloak:
     container_name: keycloak
     image: quay.io/keycloak/keycloak:24.0.1
     command: [ "start-dev", "--import-realm" ]
     environment:
       DB_VENDOR: MYSQL
-      DB_ADDR: mysql
+      DB_ADDR: keycloak-mysql
       DB_DATABASE: keycloak
       DB_USER: keycloak
       DB_PASSWORD: password
@@ -55,93 +57,106 @@ services:
     ports:
       - "8181:8080"
     volumes:
-      - ./docker/keycloak/realms/:/opt/keycloak/data/import/
+      - ./docker/keycloak/realms:/opt/keycloak/data/import
     depends_on:
       - keycloak-mysql
     networks:
       - microservices-network
     restart: unless-stopped
+
   prometheus:
-    image: prom/prometheus:v2.46.0
+    image: prom/prometheus:v2.48.0
     container_name: prometheus
-    command:
-      - --enable-feature=exemplar-storage
-      - --config.file=/etc/prometheus/prometheus.yml
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
     networks:
       - microservices-network
     restart: unless-stopped
+
   tempo:
-    image: grafana/tempo:2.2.2
+    image: grafana/tempo:2.3.1
     container_name: tempo
-    command: [ "-config.file=/etc/tempo.yaml" ]
-    volumes:
-      - ./docker/tempo/tempo.yml:/etc/tempo.yaml:ro
-      - ./data/tempo:/tmp/tempo
     ports:
-      - "3110:3100"  # Tempo
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./docker/tempo/tempo.yml:/etc/tempo/tempo.yml
+      - tempo_data:/var/tempo
+    command: ["-config.file=/etc/tempo/tempo.yml"]
     networks:
       - microservices-network
     restart: unless-stopped
+
   grafana:
-    image: grafana/grafana:10.1.0
+    image: grafana/grafana:10.2.2
     container_name: grafana
-    volumes:
-      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-    environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
     ports:
       - "3000:3000"
-    networks:
-      - microservices-network
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
       - prometheus
-      - zipkin
-      - loki
+      - tempo
+    networks:
+      - microservices-network
     restart: unless-stopped
+
   zipkin:
     image: openzipkin/zipkin:3.4
     container_name: zipkin
     ports:
       - "9411:9411"
-    environment:
-      - STORAGE_TYPE=mem
     networks:
       - microservices-network
     restart: unless-stopped
+
   loki:
     image: grafana/loki:2.9.2
     container_name: loki
-    command: [ "-config.file=/etc/loki/local-config.yaml" ]
     ports:
       - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - microservices-network
     restart: unless-stopped
-  # Microservices
+
   api-gateway:
-    image: chauhankumarashu/api-gateway:local
+    image: chauhankumarashu/api-gateway:latest
     container_name: api-gateway
     ports:
       - "9000:9000"
     environment:
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/spring-microservices-security-realm
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-      - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/order_service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=mysql
+      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongodb:27017/product-service?authSource=admin
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/microservices-realm
       - PRODUCT_SERVICE_URL=http://product-service:8080
       - ORDER_SERVICE_URL=http://order-service:8081
       - INVENTORY_SERVICE_URL=http://inventory-service:8082
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
+      - mysql
+      - mongodb
+      - keycloak
       - product-service
       - order-service
       - inventory-service
-      - keycloak
       - zipkin
       - loki
     restart: unless-stopped
@@ -149,7 +164,7 @@ services:
       - microservices-network
 
   product-service:
-    image: chauhankumarashu/product-service:local
+    image: chauhankumarashu/product-service:latest
     container_name: product-service
     ports:
       - "8080:8080"
@@ -166,7 +181,7 @@ services:
       - microservices-network
 
   order-service:
-    image: chauhankumarashu/order-service:local
+    image: chauhankumarashu/order-service:latest
     container_name: order-service
     ports:
       - "8081:8081"
@@ -187,7 +202,7 @@ services:
       - microservices-network
 
   inventory-service:
-    image: chauhankumarashu/inventory-service:local
+    image: chauhankumarashu/inventory-service:latest
     container_name: inventory-service
     ports:
       - "8082:8082"
@@ -208,3 +223,13 @@ services:
 networks:
   microservices-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
+  mysql_data:
+  keycloak_mysql_data:
+  prometheus_data:
+  tempo_data:
+  grafana_data:
+  loki_data:
+

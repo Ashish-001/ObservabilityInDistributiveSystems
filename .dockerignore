@@ -1,0 +1,54 @@
+# Maven
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Logs
+logs/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Data directories
+data/
+volume-data/
+
+# Scripts (we'll copy docker-entrypoint.sh explicitly)
+*.sh
+!docker-entrypoint.sh
+
+# Documentation
+*.md
+!README.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Test files (optional - keep if you want to run tests in container)
+# src/test/
+
