@@ -475,7 +475,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(http_server_requests_seconds_count{application=~\".+\", uri!~\".*actuator.*\"}[5m])",
+          "expr": "rate(http_server_requests_seconds_count{application=~\".+\"}[5m])",
           "legendFormat": "{{application}} - {{method}} {{status}}",
           "refId": "A"
         }
@@ -562,7 +562,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(http_server_requests_seconds_sum{application=~\".+\", uri!~\".*actuator.*\"}[5m]) / rate(http_server_requests_seconds_count{application=~\".+\", uri!~\".*actuator.*\"}[5m])",
+          "expr": "rate(http_server_requests_seconds_sum{application=~\".+\"}[5m]) / rate(http_server_requests_seconds_count{application=~\".+\"}[5m])",
           "legendFormat": "{{application}} - {{uri}}",
           "refId": "A"
         }
@@ -649,7 +649,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(http_server_requests_seconds_count{application=~\".+\", uri!~\".*actuator.*\", status=~\"4..|5..\"}[5m])",
+          "expr": "rate(http_server_requests_seconds_count{application=~\".+\", status=~\"4..|5..\"}[5m])",
           "legendFormat": "{{application}} - {{method}} [{{status}}] - {{uri}}",
           "refId": "A"
         },
@@ -658,7 +658,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(http_server_requests_seconds_count{application=~\".+\", uri!~\".*actuator.*\", exception!=\"none\", exception!=\"None\"}[5m])",
+          "expr": "rate(http_server_requests_seconds_count{application=~\".+\", exception!=\"none\", exception!=\"None\"}[5m])",
           "legendFormat": "{{application}} - {{method}} [{{exception}}] - {{uri}}",
           "refId": "B"
         }
@@ -672,7 +672,44 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 30
+      },
+      "id": 101,
+      "panels": [],
+      "title": "Distributed Tracing",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 102,
+      "options": {
+        "code": {
+          "language": "html",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"padding: 30px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 8px;\">\n  <div style=\"background: rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 8px; backdrop-filter: blur(10px);\">\n    <h2 style=\"color: #ffffff; margin: 0 0 15px 0; font-size: 24px; font-weight: 600;\">🔍 Zipkin Distributed Traces</h2>\n    <p style=\"color: #e0e0e0; margin: 0 0 25px 0; font-size: 16px;\">View and analyze distributed traces across your microservices</p>\n    <a href=\"http://localhost:9411\" target=\"_blank\" style=\"display: inline-block; padding: 12px 30px; background-color: #1f78d1; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);\">Open Zipkin UI →</a>\n    <p style=\"margin: 20px 0 0 0; font-size: 13px; color: #b0b0b0;\">Click to open Zipkin in a new tab</p>\n  </div>\n</div>"
+      },
+      "pluginVersion": "10.1.0",
+      "title": "Zipkin Traces",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 37
       },
       "id": 9,
       "panels": [],
@@ -941,7 +978,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 38
       },
       "id": 13,
       "options": {
@@ -1037,7 +1074,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 38
       },
       "id": 14,
       "options": {
