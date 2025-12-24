@@ -1,0 +1,62 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "zipkin",
+        "uid": "zipkin"
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "query": "",
+        "serviceName": "",
+        "spanName": ""
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "zipkin",
+            "uid": "zipkin"
+          },
+          "query": "",
+          "refId": "A",
+          "serviceName": ""
+        }
+      ],
+      "title": "Zipkin Distributed Traces",
+      "type": "zipkin"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["zipkin", "traces", "distributed-tracing"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Zipkin Traces",
+  "uid": "zipkin-traces",
+  "version": 1,
+  "weekStart": ""
+}
+

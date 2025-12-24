@@ -5,6 +5,14 @@ distributor:
   receivers:
     zipkin:
 
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 1h
+    compacted_block_retention: 10m
+
 storage:
   trace:
     backend: local

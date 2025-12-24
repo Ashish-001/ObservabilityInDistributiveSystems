@@ -12,7 +12,8 @@ COPY order-service/pom.xml ./order-service/
 COPY inventory-service/pom.xml ./inventory-service/
 
 # Download dependencies (this layer will be cached if pom.xml doesn't change)
-RUN mvn dependency:go-offline -B
+# Skip site and javadoc plugins to avoid issues with flexmark dependencies
+RUN mvn dependency:go-offline -B -Dmaven.site.skip=true -Dmaven.javadoc.skip=true
 
 # Copy source code
 COPY api-gateway/src ./api-gateway/src
