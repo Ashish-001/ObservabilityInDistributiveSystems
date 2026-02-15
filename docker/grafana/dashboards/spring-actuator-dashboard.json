@@ -376,7 +376,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(jvm_threads_live{job=~\"$service\"})",
+          "expr": "sum(max by (job, instance) (jvm_threads_live or jvm_threads_current))",
           "refId": "A"
         }
       ],
@@ -1151,8 +1151,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_live{job=~\"$service\"}",
-          "legendFormat": "{{job}} - Live threads (jvm_threads_live)",
+          "expr": "jvm_threads_live or jvm_threads_current",
+          "legendFormat": "{{job}} - Live",
           "refId": "A"
         },
         {
@@ -1160,8 +1160,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_daemon{job=~\"$service\"}",
-          "legendFormat": "{{job}} - Daemon threads (jvm_threads_daemon)",
+          "expr": "jvm_threads_daemon",
+          "legendFormat": "{{job}} - Daemon",
           "refId": "B"
         },
         {
@@ -1169,9 +1169,18 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_peak{job=~\"$service\"}",
-          "legendFormat": "{{job}} - Peak threads",
+          "expr": "jvm_threads_peak",
+          "legendFormat": "{{job}} - Peak",
           "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (job, __name__) ({__name__=~\"jvm_threads_.*\"})",
+          "legendFormat": "{{job}} - {{__name__}}",
+          "refId": "D"
         }
       ],
       "title": "JVM Threads",

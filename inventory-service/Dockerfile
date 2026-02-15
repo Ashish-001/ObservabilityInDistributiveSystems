@@ -18,8 +18,9 @@ RUN mvn dependency:go-offline -B -pl inventory-service -am
 # Copy source code
 COPY inventory-service/src ./inventory-service/src
 
-# Build the service
-RUN mvn clean package -DskipTests -B -pl inventory-service
+# Build the service (retry once on transient network/SSL errors)
+RUN mvn clean package -DskipTests -B -pl inventory-service || \
+    (echo "Retrying build after 15s..." && sleep 15 && mvn clean package -DskipTests -B -pl inventory-service)
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine

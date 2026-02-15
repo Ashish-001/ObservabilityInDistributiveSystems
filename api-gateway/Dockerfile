@@ -18,8 +18,9 @@ RUN mvn dependency:go-offline -B -pl api-gateway -am
 # Copy source code
 COPY api-gateway/src ./api-gateway/src
 
-# Build the service
-RUN mvn clean package -DskipTests -B -pl api-gateway
+# Build the service (retry once on transient network/SSL errors)
+RUN mvn clean package -DskipTests -B -pl api-gateway || \
+    (echo "Retrying build after 15s..." && sleep 15 && mvn clean package -DskipTests -B -pl api-gateway)
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine

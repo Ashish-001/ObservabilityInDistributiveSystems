@@ -18,8 +18,9 @@ RUN mvn dependency:go-offline -B -pl order-service -am
 # Copy source code
 COPY order-service/src ./order-service/src
 
-# Build the service
-RUN mvn clean package -DskipTests -B -pl order-service
+# Build the service (retry once on transient network/SSL errors)
+RUN mvn clean package -DskipTests -B -pl order-service || \
+    (echo "Retrying build after 15s..." && sleep 15 && mvn clean package -DskipTests -B -pl order-service)
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
