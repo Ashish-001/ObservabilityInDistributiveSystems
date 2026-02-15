@@ -14,6 +14,12 @@ services:
     networks:
       - microservices-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "mongodb://root:password@localhost:27017/admin", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
   mysql:
     image: mysql:8.3.0
     container_name: mysql
@@ -27,6 +33,12 @@ services:
     networks:
       - microservices-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmysql"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
   keycloak-mysql:
     container_name: keycloak-mysql
     image: mysql:8.3.0
@@ -40,13 +52,19 @@ services:
     networks:
       - microservices-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "127.0.0.1", "-uroot", "-proot", "-e", "SELECT 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
   keycloak:
     container_name: keycloak
     image: quay.io/keycloak/keycloak:24.0.1
     command: [ "start-dev", "--import-realm" ]
     environment:
       DB_VENDOR: MYSQL
-      DB_ADDR: mysql
+      DB_ADDR: keycloak-mysql
       DB_DATABASE: keycloak
       DB_USER: keycloak
       DB_PASSWORD: password
@@ -57,7 +75,8 @@ services:
     volumes:
       - ./docker/keycloak/realms/:/opt/keycloak/data/import/
     depends_on:
-      - keycloak-mysql
+      keycloak-mysql:
+        condition: service_healthy
     networks:
       - microservices-network
     restart: unless-stopped
@@ -158,9 +177,12 @@ services:
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
       - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
-      - mongodb
-      - zipkin
-      - loki
+      mongodb:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      loki:
+        condition: service_started
     restart: unless-stopped
     networks:
       - microservices-network
@@ -178,10 +200,14 @@ services:
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
       - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
-      - mysql
-      - inventory-service
-      - zipkin
-      - loki
+      mysql:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
+      zipkin:
+        condition: service_started
+      loki:
+        condition: service_started
     restart: unless-stopped
     networks:
       - microservices-network
@@ -198,9 +224,12 @@ services:
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
       - LOKI_URL=http://loki:3100/loki/api/v1/push
     depends_on:
-      - mysql
-      - zipkin
-      - loki
+      mysql:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      loki:
+        condition: service_started
     restart: unless-stopped
     networks:
       - microservices-network

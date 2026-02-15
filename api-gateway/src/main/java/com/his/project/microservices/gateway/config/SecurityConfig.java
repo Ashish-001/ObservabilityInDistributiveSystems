@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class SecurityConfig {
 
     private final String[] freeResourceUrls = {"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
-            "/swagger-resources/**", "/api-docs/**", "/aggregate/**", "/actuator/prometheus", 
+            "/swagger-resources/**", "/api-docs/**", "/aggregate/**", "/actuator/**",
             "/api/product", "/api/product/**", "/api/order", "/api/order/**", "/api/inventory", "/api/inventory/**"};
 
     // Public endpoints - completely bypass OAuth2
